@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Enhanced Party Emoji',
+      title: 'Emoji Drawer',
       home: const EmojiDrawingScreen(),
     );
   }
@@ -27,6 +27,18 @@ class EmojiDrawingScreen extends StatefulWidget {
 
 class _EmojiDrawingScreenState extends State<EmojiDrawingScreen> {
   String selectedEmoji = 'party';
+  Color selectedColor = Colors.yellow; // 👈 Default emoji color
+  final List<String> emojiOptions = ['party', 'heart', 'smile', 'cool'];
+
+  final List<Color> colorOptions = [
+    Colors.yellow,
+    Colors.red,
+    Colors.pink,
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +48,7 @@ class _EmojiDrawingScreenState extends State<EmojiDrawingScreen> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.orangeAccent, Colors.pinkAccent, Colors.purpleAccent],
+            colors: [Colors.tealAccent, Colors.blueAccent, Colors.purpleAccent],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -44,57 +56,85 @@ class _EmojiDrawingScreenState extends State<EmojiDrawingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(
-              width: 280,
-              height: 280,
-              child: CustomPaint(
-                painter: EmojiPainter(selectedEmoji),
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Colors.orange, Colors.red, Colors.deepPurple],
+              ).createShader(bounds),
+              child: const Text(
+                'Emoji Drawer',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                emojiButton('party', '🥳 Party'),
-                const SizedBox(width: 20),
-                emojiButton('heart', '❤️ Heart'),
-              ],
+            SizedBox(
+              width: 320,
+              height: 320,
+              child: CustomPaint(
+                painter: SmileyPainter(selectedEmoji, selectedColor),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Dropdown for emoji selection
+            DropdownButton<String>(
+              value: selectedEmoji,
+              dropdownColor: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              items: emojiOptions.map((emoji) {
+                return DropdownMenuItem(
+                  value: emoji,
+                  child: Text(
+                    emoji.toUpperCase(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedEmoji = value!;
+                });
+              },
+            ),
+            const SizedBox(height: 15),
+
+            // Row of color pickers
+            Wrap(
+              spacing: 10,
+              children: colorOptions.map((color) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedColor = color;
+                    });
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: color,
+                    radius: 18,
+                    child: selectedColor == color
+                        ? const Icon(Icons.check, color: Colors.white)
+                        : null,
+                  ),
+                );
+              }).toList(),
             ),
           ],
         ),
       ),
     );
   }
-
-  Widget emojiButton(String name, String label) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedEmoji = name;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        decoration: BoxDecoration(
-          color: selectedEmoji == name ? Colors.white : Colors.white.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 16,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-class EmojiPainter extends CustomPainter {
+class SmileyPainter extends CustomPainter {
   final String emojiType;
-  EmojiPainter(this.emojiType);
+  final Color emojiColor;
+  SmileyPainter(this.emojiType, this.emojiColor);
 
   final Random random = Random();
 
@@ -102,61 +142,89 @@ class EmojiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     switch (emojiType) {
       case 'party':
-        drawEnhancedPartyFace(canvas, size);
+        drawPartyFace(canvas, size, Offset(size.width / 2, size.height / 2));
         break;
       case 'heart':
-        drawHeart(canvas, size);
+        drawHeart(canvas, size, Offset(size.width / 2, size.height / 2));
+        break;
+      case 'smile':
+        drawSmileyFace(canvas, size, Offset(size.width / 2, size.height / 2));
+        break;
+      case 'cool':
+        drawCoolFace(canvas, size, Offset(size.width / 2, size.height / 2));
         break;
       default:
-        drawEnhancedPartyFace(canvas, size);
+        drawSmileyFace(canvas, size, Offset(size.width / 2, size.height / 2));
     }
   }
 
-  void drawEnhancedPartyFace(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final faceRadius = size.width / 2;
-
-    final facePaint = Paint()
-      ..shader = RadialGradient(
-        colors: [Colors.yellow, Colors.orangeAccent.shade700],
-        center: Alignment(-0.2, -0.2),
-        radius: 0.8,
-      ).createShader(Rect.fromCircle(center: center, radius: faceRadius));
-    canvas.drawCircle(center, faceRadius, facePaint);
+  void drawSmileyFace(Canvas canvas, Size size, Offset center) {
+    final facePaint = Paint()..color = emojiColor; // 👈 Use custom color
+    canvas.drawCircle(center, size.width / 3, facePaint);
 
     final eyePaint = Paint()..color = Colors.black;
-    final eyeGlowPaint = Paint()..color = Colors.white.withOpacity(0.5);
-    canvas.drawCircle(Offset(size.width * 0.35, size.height * 0.35), 16, eyePaint);
-    canvas.drawCircle(Offset(size.width * 0.65, size.height * 0.35), 16, eyePaint);
-    canvas.drawCircle(Offset(size.width * 0.34, size.height * 0.34), 6, eyeGlowPaint);
-    canvas.drawCircle(Offset(size.width * 0.64, size.height * 0.34), 6, eyeGlowPaint);
+    canvas.drawCircle(Offset(center.dx - 40, center.dy - 30), 12, eyePaint);
+    canvas.drawCircle(Offset(center.dx + 40, center.dy - 30), 12, eyePaint);
 
     final mouthPaint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 4;
+    final mouthPath = Path();
+    mouthPath.moveTo(center.dx - 50, center.dy + 20);
+    mouthPath.quadraticBezierTo(center.dx, center.dy + 60, center.dx + 50, center.dy + 20);
+    canvas.drawPath(mouthPath, mouthPaint);
+  }
+
+  void drawPartyFace(Canvas canvas, Size size, Offset center) {
+    final faceRadius = size.width / 2.5;
+    final facePaint = Paint()
+      ..shader = RadialGradient(
+        colors: [emojiColor, emojiColor.withOpacity(0.7)], // 👈 Use selected color
+        center: Alignment(-0.2, -0.2),
+        radius: 0.9,
+      ).createShader(Rect.fromCircle(center: center, radius: faceRadius));
+    canvas.drawCircle(center, faceRadius, facePaint);
+
+    final eyePaint = Paint()..color = Colors.black;
+    canvas.drawCircle(Offset(center.dx - 40, center.dy - 30), 14, eyePaint);
+    canvas.drawCircle(Offset(center.dx + 40, center.dy - 30), 14, eyePaint);
+
+    final mouthPaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
     final path = Path();
-    path.moveTo(size.width * 0.25, size.height * 0.65);
-    path.quadraticBezierTo(size.width / 2, size.height * 0.9, size.width * 0.75, size.height * 0.65);
+    path.moveTo(center.dx - 50, center.dy + 40);
+    path.quadraticBezierTo(center.dx, center.dy + 70, center.dx + 50, center.dy + 40);
     canvas.drawPath(path, mouthPaint);
 
     final hatPaint = Paint()..color = Colors.redAccent;
     final hatPath = Path();
-    hatPath.moveTo(center.dx, size.height * -0.05);
-    hatPath.lineTo(size.width * 0.25, size.height * 0.2);
-    hatPath.lineTo(size.width * 0.75, size.height * 0.2);
+    hatPath.moveTo(center.dx, center.dy - 120);
+    hatPath.lineTo(center.dx - 60, center.dy - 40);
+    hatPath.lineTo(center.dx + 60, center.dy - 40);
     hatPath.close();
     canvas.drawPath(hatPath, hatPaint);
 
-    final stripePaint = Paint()..color = Colors.yellowAccent..strokeWidth = 4;
-    canvas.drawLine(Offset(center.dx, size.height * -0.05), Offset(center.dx, size.height * 0.2), stripePaint);
+    final stripePaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 4;
+    canvas.drawLine(Offset(center.dx, center.dy - 120), Offset(center.dx, center.dy - 40), stripePaint);
 
     final pomPomPaint = Paint()..color = Colors.orange;
-    canvas.drawCircle(Offset(center.dx, size.height * -0.05), 10, pomPomPaint);
+    canvas.drawCircle(Offset(center.dx, center.dy - 120), 10, pomPomPaint);
 
-    final confettiColors = [Colors.red, Colors.green, Colors.blue, Colors.purple, Colors.orange, Colors.cyan, Colors.pinkAccent];
-    for (int i = 0; i < 40; i++) {
+    final confettiColors = [
+      Colors.red,
+      Colors.green,
+      Colors.blue,
+      Colors.purple,
+      Colors.orange,
+      Colors.cyan,
+      Colors.pinkAccent
+    ];
+    for (int i = 0; i < 35; i++) {
       double x = random.nextDouble() * size.width;
       double y = random.nextDouble() * size.height * 0.5;
       final shapeType = random.nextInt(3);
@@ -169,38 +237,64 @@ class EmojiPainter extends CustomPainter {
           canvas.drawRect(Rect.fromCenter(center: Offset(x, y), width: 6, height: 6), confettiPaint);
           break;
         case 2:
-          final path = Path();
-          path.moveTo(x, y - 5);
-          path.lineTo(x - 5, y + 5);
-          path.lineTo(x + 5, y + 5);
-          path.close();
-          canvas.drawPath(path, confettiPaint);
+          final tri = Path();
+          tri.moveTo(x, y - 5);
+          tri.lineTo(x - 5, y + 5);
+          tri.lineTo(x + 5, y + 5);
+          tri.close();
+          canvas.drawPath(tri, confettiPaint);
           break;
       }
     }
-
-    for (int i = 0; i < 12; i++) {
-      double x = random.nextDouble() * size.width;
-      double y = random.nextDouble() * size.height;
-      canvas.drawCircle(Offset(x, y), 2, Paint()..color = Colors.white.withOpacity(0.8));
-    }
   }
 
-  void drawHeart(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.red;
+  void drawHeart(Canvas canvas, Size size, Offset center) {
+    final paint = Paint()
+      ..shader = LinearGradient(
+        colors: [emojiColor, emojiColor.withOpacity(0.6)], // 👈 Custom heart color
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromCircle(center: center, radius: 100));
+
     Path path = Path();
-    path.moveTo(size.width / 2, size.height * 0.7);
+    path.moveTo(center.dx, center.dy + 60);
     path.cubicTo(
-      size.width * 0.1, size.height * 0.5,
-      size.width * 0.3, size.height * 0.1,
-      size.width / 2, size.height * 0.3,
+      center.dx - 100, center.dy - 20,
+      center.dx - 40, center.dy - 120,
+      center.dx, center.dy - 40,
     );
     path.cubicTo(
-      size.width * 0.7, size.height * 0.1,
-      size.width * 0.9, size.height * 0.5,
-      size.width / 2, size.height * 0.7,
+      center.dx + 40, center.dy - 120,
+      center.dx + 100, center.dy - 20,
+      center.dx, center.dy + 60,
     );
     canvas.drawPath(path, paint);
+  }
+
+  void drawCoolFace(Canvas canvas, Size size, Offset center) {
+    final facePaint = Paint()..color = emojiColor; // 👈 Custom face color
+    canvas.drawCircle(center, size.width / 3, facePaint);
+
+    final glassesPaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6;
+    canvas.drawLine(Offset(center.dx - 50, center.dy - 20), Offset(center.dx + 50, center.dy - 20), glassesPaint);
+    canvas.drawRect(Rect.fromCenter(center: Offset(center.dx - 35, center.dy - 20), width: 40, height: 25), glassesPaint);
+    canvas.drawRect(Rect.fromCenter(center: Offset(center.dx + 35, center.dy - 20), width: 40, height: 25), glassesPaint);
+
+    final mouthPaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 5
+      ..style = PaintingStyle.stroke;
+
+    final mouthPath = Path();
+    mouthPath.moveTo(center.dx - 40, center.dy + 40);
+    mouthPath.quadraticBezierTo(
+      center.dx, center.dy + 70,
+      center.dx + 40, center.dy + 40,
+    );
+    canvas.drawPath(mouthPath, mouthPaint);
   }
 
   @override
