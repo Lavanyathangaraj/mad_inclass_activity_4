@@ -27,7 +27,9 @@ class EmojiDrawingScreen extends StatefulWidget {
 
 class _EmojiDrawingScreenState extends State<EmojiDrawingScreen> {
   String selectedEmoji = 'party';
-  Color selectedColor = Colors.yellow; // 👈 Default emoji color
+  Color selectedColor = Colors.yellow;
+  double emojiScale = 1.0;
+
   final List<String> emojiOptions = ['party', 'heart', 'smile', 'cool'];
 
   final List<Color> colorOptions = [
@@ -74,12 +76,14 @@ class _EmojiDrawingScreenState extends State<EmojiDrawingScreen> {
               width: 320,
               height: 320,
               child: CustomPaint(
-                painter: SmileyPainter(selectedEmoji, selectedColor),
+                painter: SmileyPainter(
+                  selectedEmoji,
+                  selectedColor,
+                  scale: emojiScale,
+                ),
               ),
             ),
             const SizedBox(height: 20),
-
-            // Dropdown for emoji selection
             DropdownButton<String>(
               value: selectedEmoji,
               dropdownColor: Colors.white,
@@ -103,8 +107,6 @@ class _EmojiDrawingScreenState extends State<EmojiDrawingScreen> {
               },
             ),
             const SizedBox(height: 15),
-
-            // Row of color pickers
             Wrap(
               spacing: 10,
               children: colorOptions.map((color) {
@@ -124,6 +126,27 @@ class _EmojiDrawingScreenState extends State<EmojiDrawingScreen> {
                 );
               }).toList(),
             ),
+            const SizedBox(height: 20),
+            Column(
+              children: [
+                const Text(
+                  "Adjust Emoji Size",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Slider(
+                  value: emojiScale,
+                  min: 0.5,
+                  max: 1.5,
+                  divisions: 10,
+                  label: emojiScale.toStringAsFixed(1),
+                  onChanged: (value) {
+                    setState(() {
+                      emojiScale = value;
+                    });
+                  },
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -134,7 +157,9 @@ class _EmojiDrawingScreenState extends State<EmojiDrawingScreen> {
 class SmileyPainter extends CustomPainter {
   final String emojiType;
   final Color emojiColor;
-  SmileyPainter(this.emojiType, this.emojiColor);
+  final double scale;
+
+  SmileyPainter(this.emojiType, this.emojiColor, {this.scale = 1.0});
 
   final Random random = Random();
 
@@ -159,61 +184,69 @@ class SmileyPainter extends CustomPainter {
   }
 
   void drawSmileyFace(Canvas canvas, Size size, Offset center) {
-    final facePaint = Paint()..color = emojiColor; // 👈 Use custom color
-    canvas.drawCircle(center, size.width / 3, facePaint);
+    final radius = (size.width / 3) * scale;
+    final facePaint = Paint()..color = emojiColor;
+    canvas.drawCircle(center, radius, facePaint);
 
     final eyePaint = Paint()..color = Colors.black;
-    canvas.drawCircle(Offset(center.dx - 40, center.dy - 30), 12, eyePaint);
-    canvas.drawCircle(Offset(center.dx + 40, center.dy - 30), 12, eyePaint);
+    canvas.drawCircle(
+        Offset(center.dx - 40 * scale, center.dy - 30 * scale), 12 * scale, eyePaint);
+    canvas.drawCircle(
+        Offset(center.dx + 40 * scale, center.dy - 30 * scale), 12 * scale, eyePaint);
 
     final mouthPaint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
+      ..strokeWidth = 4 * scale;
     final mouthPath = Path();
-    mouthPath.moveTo(center.dx - 50, center.dy + 20);
-    mouthPath.quadraticBezierTo(center.dx, center.dy + 60, center.dx + 50, center.dy + 20);
+    mouthPath.moveTo(center.dx - 50 * scale, center.dy + 20 * scale);
+    mouthPath.quadraticBezierTo(
+        center.dx, center.dy + 60 * scale, center.dx + 50 * scale, center.dy + 20 * scale);
     canvas.drawPath(mouthPath, mouthPaint);
   }
 
   void drawPartyFace(Canvas canvas, Size size, Offset center) {
-    final faceRadius = size.width / 2.5;
+    final faceRadius = (size.width / 2.5) * scale;
     final facePaint = Paint()
       ..shader = RadialGradient(
-        colors: [emojiColor, emojiColor.withOpacity(0.7)], // 👈 Use selected color
-        center: Alignment(-0.2, -0.2),
+        colors: [emojiColor, emojiColor.withOpacity(0.7)],
+        center: const Alignment(-0.2, -0.2),
         radius: 0.9,
       ).createShader(Rect.fromCircle(center: center, radius: faceRadius));
     canvas.drawCircle(center, faceRadius, facePaint);
 
     final eyePaint = Paint()..color = Colors.black;
-    canvas.drawCircle(Offset(center.dx - 40, center.dy - 30), 14, eyePaint);
-    canvas.drawCircle(Offset(center.dx + 40, center.dy - 30), 14, eyePaint);
+    canvas.drawCircle(
+        Offset(center.dx - 40 * scale, center.dy - 30 * scale), 14 * scale, eyePaint);
+    canvas.drawCircle(
+        Offset(center.dx + 40 * scale, center.dy - 30 * scale), 14 * scale, eyePaint);
 
     final mouthPaint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
+      ..strokeWidth = 4 * scale;
     final path = Path();
-    path.moveTo(center.dx - 50, center.dy + 40);
-    path.quadraticBezierTo(center.dx, center.dy + 70, center.dx + 50, center.dy + 40);
+    path.moveTo(center.dx - 50 * scale, center.dy + 40 * scale);
+    path.quadraticBezierTo(center.dx, center.dy + 70 * scale,
+        center.dx + 50 * scale, center.dy + 40 * scale);
     canvas.drawPath(path, mouthPaint);
 
     final hatPaint = Paint()..color = Colors.redAccent;
     final hatPath = Path();
-    hatPath.moveTo(center.dx, center.dy - 120);
-    hatPath.lineTo(center.dx - 60, center.dy - 40);
-    hatPath.lineTo(center.dx + 60, center.dy - 40);
+    hatPath.moveTo(center.dx, center.dy - 120 * scale);
+    hatPath.lineTo(center.dx - 60 * scale, center.dy - 40 * scale);
+    hatPath.lineTo(center.dx + 60 * scale, center.dy - 40 * scale);
     hatPath.close();
     canvas.drawPath(hatPath, hatPaint);
 
     final stripePaint = Paint()
       ..color = Colors.white
-      ..strokeWidth = 4;
-    canvas.drawLine(Offset(center.dx, center.dy - 120), Offset(center.dx, center.dy - 40), stripePaint);
+      ..strokeWidth = 4 * scale;
+    canvas.drawLine(Offset(center.dx, center.dy - 120 * scale),
+        Offset(center.dx, center.dy - 40 * scale), stripePaint);
 
     final pomPomPaint = Paint()..color = Colors.orange;
-    canvas.drawCircle(Offset(center.dx, center.dy - 120), 10, pomPomPaint);
+    canvas.drawCircle(Offset(center.dx, center.dy - 120 * scale), 10 * scale, pomPomPaint);
 
     final confettiColors = [
       Colors.red,
@@ -228,19 +261,22 @@ class SmileyPainter extends CustomPainter {
       double x = random.nextDouble() * size.width;
       double y = random.nextDouble() * size.height * 0.5;
       final shapeType = random.nextInt(3);
-      final confettiPaint = Paint()..color = confettiColors[random.nextInt(confettiColors.length)];
+      final confettiPaint =
+          Paint()..color = confettiColors[random.nextInt(confettiColors.length)];
       switch (shapeType) {
         case 0:
-          canvas.drawCircle(Offset(x, y), 5, confettiPaint);
+          canvas.drawCircle(Offset(x, y), 5 * scale, confettiPaint);
           break;
         case 1:
-          canvas.drawRect(Rect.fromCenter(center: Offset(x, y), width: 6, height: 6), confettiPaint);
+          canvas.drawRect(
+              Rect.fromCenter(center: Offset(x, y), width: 6 * scale, height: 6 * scale),
+              confettiPaint);
           break;
         case 2:
           final tri = Path();
-          tri.moveTo(x, y - 5);
-          tri.lineTo(x - 5, y + 5);
-          tri.lineTo(x + 5, y + 5);
+          tri.moveTo(x, y - 5 * scale);
+          tri.lineTo(x - 5 * scale, y + 5 * scale);
+          tri.lineTo(x + 5 * scale, y + 5 * scale);
           tri.close();
           canvas.drawPath(tri, confettiPaint);
           break;
@@ -251,49 +287,51 @@ class SmileyPainter extends CustomPainter {
   void drawHeart(Canvas canvas, Size size, Offset center) {
     final paint = Paint()
       ..shader = LinearGradient(
-        colors: [emojiColor, emojiColor.withOpacity(0.6)], // 👈 Custom heart color
+        colors: [emojiColor, emojiColor.withOpacity(0.6)],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-      ).createShader(Rect.fromCircle(center: center, radius: 100));
+      ).createShader(Rect.fromCircle(center: center, radius: 100 * scale));
 
     Path path = Path();
-    path.moveTo(center.dx, center.dy + 60);
-    path.cubicTo(
-      center.dx - 100, center.dy - 20,
-      center.dx - 40, center.dy - 120,
-      center.dx, center.dy - 40,
-    );
-    path.cubicTo(
-      center.dx + 40, center.dy - 120,
-      center.dx + 100, center.dy - 20,
-      center.dx, center.dy + 60,
-    );
+    path.moveTo(center.dx, center.dy + 60 * scale);
+    path.cubicTo(center.dx - 100 * scale, center.dy - 20 * scale,
+        center.dx - 40 * scale, center.dy - 120 * scale, center.dx, center.dy - 40 * scale);
+    path.cubicTo(center.dx + 40 * scale, center.dy - 120 * scale,
+        center.dx + 100 * scale, center.dy - 20 * scale, center.dx, center.dy + 60 * scale);
     canvas.drawPath(path, paint);
   }
 
   void drawCoolFace(Canvas canvas, Size size, Offset center) {
-    final facePaint = Paint()..color = emojiColor; // 👈 Custom face color
-    canvas.drawCircle(center, size.width / 3, facePaint);
+    final facePaint = Paint()..color = emojiColor;
+    canvas.drawCircle(center, (size.width / 3) * scale, facePaint);
 
     final glassesPaint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6;
-    canvas.drawLine(Offset(center.dx - 50, center.dy - 20), Offset(center.dx + 50, center.dy - 20), glassesPaint);
-    canvas.drawRect(Rect.fromCenter(center: Offset(center.dx - 35, center.dy - 20), width: 40, height: 25), glassesPaint);
-    canvas.drawRect(Rect.fromCenter(center: Offset(center.dx + 35, center.dy - 20), width: 40, height: 25), glassesPaint);
+      ..strokeWidth = 6 * scale;
+    canvas.drawLine(Offset(center.dx - 50 * scale, center.dy - 20 * scale),
+        Offset(center.dx + 50 * scale, center.dy - 20 * scale), glassesPaint);
+    canvas.drawRect(
+        Rect.fromCenter(
+            center: Offset(center.dx - 35 * scale, center.dy - 20 * scale),
+            width: 40 * scale,
+            height: 25 * scale),
+        glassesPaint);
+    canvas.drawRect(
+        Rect.fromCenter(
+            center: Offset(center.dx + 35 * scale, center.dy - 20 * scale),
+            width: 40 * scale,
+            height: 25 * scale),
+        glassesPaint);
 
     final mouthPaint = Paint()
       ..color = Colors.black
-      ..strokeWidth = 5
+      ..strokeWidth = 5 * scale
       ..style = PaintingStyle.stroke;
-
     final mouthPath = Path();
-    mouthPath.moveTo(center.dx - 40, center.dy + 40);
-    mouthPath.quadraticBezierTo(
-      center.dx, center.dy + 70,
-      center.dx + 40, center.dy + 40,
-    );
+    mouthPath.moveTo(center.dx - 40 * scale, center.dy + 40 * scale);
+    mouthPath.quadraticBezierTo(center.dx, center.dy + 70 * scale,
+        center.dx + 40 * scale, center.dy + 40 * scale);
     canvas.drawPath(mouthPath, mouthPaint);
   }
 
