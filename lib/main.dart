@@ -10,11 +10,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Smiley Face',
+      title: 'Flutter Smiley Face Eyes',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Smiley Face'),
+      home: const MyHomePage(title: 'Flutter Smiley Face Eyes'),
     );
   }
 }
@@ -31,15 +31,41 @@ class MyHomePage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(title),
       ),
-      body: const Center(
-        child: SizedBox(
+      body: Center(
+        child: Container(
           width: 200,
           height: 200,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.yellow,
-              shape: BoxShape.circle,
-            ),
+          decoration: const BoxDecoration(
+            color: Colors.yellow,
+            shape: BoxShape.circle,
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: 50,
+                top: 60,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 50,
+                top: 60,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
